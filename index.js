@@ -56,6 +56,17 @@ const getStreamFlowRate = async (sender, receiver) => {
   }
 };
 
+const joinCommandResponse = (msg) => {
+  // prepare jwt token with guidid, memberid and user address
+  const token = jwt.sign(
+    { guildId: msg.guildId, memberId: msg.member.id },
+    process.env.JWT_SECRET,
+    { expiresIn: "1h" }
+  );
+  // send message with link to app url with token
+  return `Please visit ${APP_URL}/?token=${token} to verify your wallet address and join the server`;
+};
+
 cron.schedule("0 0 * * *", async () => {
   // code to check streams and remove role goes here
   console.log(
@@ -98,19 +109,7 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", async (msg) => {
-  const joinCommandResponse = (msg) => {
-    // prepare jwt token with guidid, memberid and user address
-    console.log("ssss", msg.guildId, msg.member.id);
-    const token = jwt.sign(
-      { guildId: msg.guildId, memberId: msg.member.id },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-    // send message with link to app url with token
-    return `Please visit ${APP_URL}/?token=${token} to verify your wallet address and join the server`;
-  };
   if (msg.author.bot || msg.channel.type === "DM") return;
-
   if (msg.channelId === START_HERE_CHANNEL_ID) {
     // Basic command handler
     const commands = [
@@ -150,7 +149,7 @@ app.post("/verify", async (req, res) => {
   if (
     ["token", "address", "message", "signature"].some((key) => !req.body[key])
   )
-    return res.status(400).send("Invalid request");
+    return res.status(400).send("Missing required parameters: token, address, message, signature");
   const { token, address, message, signature } = req.body;
   try {
     const digest = arrayify(hashMessage(message));
@@ -193,7 +192,7 @@ app.post("/verify", async (req, res) => {
     }
   } catch (err) {
     console.log("err", err);
-    return res.status(500).send("Something went wrong");
+    return res.status(500).send("Something went wrong!");
   }
 });
 app.listen(port, () => {
