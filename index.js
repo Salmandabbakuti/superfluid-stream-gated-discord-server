@@ -61,7 +61,7 @@ const joinCommandResponse = (msg) => {
   const token = jwt.sign(
     { guildId: msg.guildId, memberId: msg.member.id },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: 10 * 60 * 1000 } // 10 minutes
   );
   // send message with link to app url with token
   return `Please visit ${APP_URL}/?token=${token} to verify your wallet address and join the server`;
