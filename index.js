@@ -1,19 +1,17 @@
 const { Client, GatewayIntentBits } = require("discord.js");
 const { getAddress } = require("@ethersproject/address");
 const { JsonRpcProvider } = require("@ethersproject/providers");
-const { Contract } = require("@ethersproject/contracts");
+const { Framework } = require("@superfluid-finance/sdk-core");
+const cron = require("node-cron");
 require("dotenv").config();
 
 const START_HERE_CHANNEL_ID = "1098594000585379934";
+const SERVER_GUILD_ID = "1098594000115597353";
 const SERVER_ADMIN_ADDRESS = "0x7348943c8d263ea253c0541656c36b88becd77b9";
-const CFAV1_ADDRESS = "0xF2d68898557cCb2Cf4C10c3Ef2B034b2a69DAD00";
-const ABI = [
-  "function balanceOf(address owner) view returns (uint256)",
-  "function getFlowRate(address sender, address receiver) view returns (int96)",
-];
+const SUPER_DAI_ADDRESS = "0xF2d68898557cCb2Cf4C10c3Ef2B034b2a69DAD00";
 
 const provider = new JsonRpcProvider(process.env.RPC_URL);
-const cfaContract = new Contract(CFAV1_ADDRESS, ABI, provider);
+// Create a new Superfluid SDK instance
 
 const isAddressValid = (address) => {
   try {
@@ -26,12 +24,46 @@ const isAddressValid = (address) => {
 
 const getStreamFlowRate = async (sender, receiver) => {
   try {
-    const flowRate = await cfaContract.getFlowRate(sender, receiver);
+    const sf = await Framework.create({
+      provider,
+      chainId: 5
+    });
+    const { flowRate } = await sf.cfaV1.getFlow({
+      superToken: SUPER_DAI_ADDRESS,
+      sender,
+      receiver,
+      providerOrSigner: provider,
+
+    });
     return flowRate;
   } catch (error) {
+    console.log("err getting flow info", error);
     return 0;
   }
 };
+
+cron.schedule("0 0 * * *", async () => {
+  // code to check streams and remove role goes here
+  console.log("running cron job to check streams and remove roles if stream is not active");
+  const guild = client.guilds.cache.get(SERVER_GUILD_ID);
+  const streamerRole = guild.roles.cache.find((role) => role.name === "streamer");
+  // console.log("streamer role", streamerRole);
+  const membersWithRole = guild.members.cache.filter((member) => member.roles.cache.has(streamerRole.id));
+  console.log("membersWithRole", membersWithRole);
+
+  for (const [memberID, member] of membersWithRole) {
+    const userAddress = "0x..."; // get user address from member object
+    const streamFlowRate = await getStreamFlowRate(
+      userAddress.toLowerCase(),
+      SERVER_ADMIN_ADDRESS
+    );
+    if (streamFlowRate === 0) {
+      await member.roles.remove(streamerRole);
+    }
+  }
+
+});
+
 
 const client = new Client({
   intents: [
@@ -48,6 +80,7 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", async (msg) => {
+  console.log("msg", msg);
   if (msg.author.bot || msg.channel.type === "DM") return;
 
   if (msg.channelId === START_HERE_CHANNEL_ID) {
