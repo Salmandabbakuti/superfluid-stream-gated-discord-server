@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Connect Wallet</title>
+  <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
+</head>
+
+<body>
+  <div>
+    <button onclick="connect()">Connect Wallet</button>
+    <div id="address"></div>
+  </div>
+
+  <script>
+    const token = new URL(window.location.href).searchParams.get("token");
+    console.log(token);
+
+    async function connect() {
+      const addressDiv = document.getElementById("address");
+      if (!window.ethereum) return addressDiv.innerHTML = "Please install Metamask";
+      try {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const provider = new ethers.providers.Web3Provider(window.ethereum);
+        const signer = provider.getSigner();
+        const address = await signer.getAddress();
+        const message = [
+          "Welcome to Passwordless. This site is requesting your signature to approve login authorization!",
+          "Click to sign in and accept the terms and conditions (https://example.org/) of this app.",
+          "This request will not trigger a blockchain transaction or cost any gas fees.",
+          `Wallet Address: ${address}`,
+          `Timestamp: ${new Date().toISOString()}`,
+          `Id: ${Math.random().toString(36).slice(-10)}`,
+        ].join('\n\n');
+        const signature = await signer.signMessage(message);
+        const data = { token, address, message, signature };
+        const response = await fetch("http://localhost:3000/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+        if (response.ok) {
+          addressDiv.innerHTML = `Wallet address: ${address}`;
+        } else {
+          addressDiv.innerHTML = "Failed to connect wallet";
+        }
+      } catch (error) {
+        console.log(error);
+        addressDiv.innerHTML = "Failed to connect wallet";
+      }
+    }
+  </script>
+</body>
+
+</html>
