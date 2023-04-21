@@ -9,6 +9,7 @@ const START_HERE_CHANNEL_ID = "1098594000585379934";
 const SERVER_GUILD_ID = "1098594000115597353";
 const SERVER_ADMIN_ADDRESS = "0x7348943c8d263ea253c0541656c36b88becd77b9";
 const SUPER_DAI_ADDRESS = "0xF2d68898557cCb2Cf4C10c3Ef2B034b2a69DAD00";
+const REQUIRED_MINIMUM_FLOW_RATE = 192901234567; // 192901234567 is 0.5 DAIx/month to consider access to the channel. we can think of it as a subscription to access channel content
 
 const provider = new JsonRpcProvider(process.env.RPC_URL);
 // Create a new Superfluid SDK instance
@@ -49,7 +50,7 @@ cron.schedule("0 0 * * *", async () => {
   const streamerRole = guild.roles.cache.find((role) => role.name === "streamer");
   // console.log("streamer role", streamerRole);
   const membersWithRole = guild.members.cache.filter((member) => member.roles.cache.has(streamerRole.id));
-  console.log("membersWithRole", membersWithRole);
+  // console.log("membersWithRole", membersWithRole);
 
   for (const [memberID, member] of membersWithRole) {
     const userAddress = "0x..."; // get user address from member object
@@ -57,7 +58,7 @@ cron.schedule("0 0 * * *", async () => {
       userAddress.toLowerCase(),
       SERVER_ADMIN_ADDRESS
     );
-    if (streamFlowRate === 0) {
+    if (streamFlowRate < REQUIRED_MINIMUM_FLOW_RATE) {
       await member.roles.remove(streamerRole);
     }
   }
@@ -80,7 +81,6 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", async (msg) => {
-  console.log("msg", msg);
   if (msg.author.bot || msg.channel.type === "DM") return;
 
   if (msg.channelId === START_HERE_CHANNEL_ID) {
@@ -93,17 +93,19 @@ client.on("messageCreate", async (msg) => {
         userAddress.toLowerCase(),
         SERVER_ADMIN_ADDRESS
       );
-      console.log(streamFlowRate);
-      if (streamFlowRate > 0) {
+      console.log("user stream flowrate:", streamFlowRate);
+
+      if (streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE) {
         const streamerRole = msg.guild.roles.cache.find(
           (role) => role.name === "streamer"
         );
         await msg.member.roles.add(streamerRole);
         msg.reply(`Your address is: ${userAddress}\nYou now have access to the superfluid-exclusive channel!`);
       } else {
-        msg.reply("You do not have a stream between your address and the server admin address to access the #superfluid-exclusive channel.");
+        msg.reply(`You don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on goerli network is required.`);
       }
     } else {
+      // Basic command handler
       const commands = [
         ["ping", "pong"],
         ["pong", "ping"],
