@@ -68,7 +68,7 @@ const generateJwtToken = (interaction) => {
   return jwt.sign(
     { guildId: interaction.guildId, memberId: interaction.member.id },
     JWT_SECRET,
-    { expiresIn: 10 * 60 * 1000 } // 10 minutes
+    { expiresIn: "5m" } // 5 minutes
   );
 };
 
@@ -81,22 +81,27 @@ cron.schedule("0 0 * * *", async () => {
   const streamerRole = guild.roles.cache.find(
     (role) => role.name === "streamer"
   );
-  // console.log("streamer role", streamerRole);
-  const membersWithRole = guild.members.cache.filter((member) =>
-    member.roles.cache.has(streamerRole.id)
-  );
-  // console.log("membersWithRole", membersWithRole);
+  console.log("streamer role", streamerRole);
+  const members = await guild.members.fetch({
+    force: true
+  });
+  const membersWithRole = members.filter((member) => member.roles.cache.has(streamerRole.id)).values();
+  console.log("membersWithRole", membersWithRole);
 
-  for (const [memberID, member] of membersWithRole) {
-    const userAddress = member.walletAddress;
+  for await (const member of membersWithRole) {
+    console.log("here..");
+    const userAddress = member.nickname || "";
+    console.log("userAddress", userAddress);
     const streamFlowRate = await getStreamFlowRate(
       userAddress.toLowerCase(),
       SERVER_ADMIN_ADDRESS
     );
+    console.log(`Current flow rate for ${userAddress} is ${streamFlowRate} DAIx/sec`);
     if (streamFlowRate < REQUIRED_MINIMUM_FLOW_RATE) {
       await member.roles.remove(streamerRole);
     }
   }
+  console.log("done checking streams and removing roles");
 });
 
 const client = new Client({
@@ -142,7 +147,6 @@ client.on("messageCreate", async (msg) => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  console.log("interaction", interaction);
   if (!interaction.isCommand())
     return interaction.reply(
       "I don't know what you mean. I can only respond to the following commands: /verify, /ping"
@@ -179,7 +183,7 @@ client.on("interactionCreate", async (interaction) => {
 
 client.on("guildMemberAdd", async (member) => {
   // Check if the member has a connected wallet
-  console.log("member hopped into server", member);
+  console.log("a new member hopped into server");
 });
 
 const port = process.env.PORT || 3000;
@@ -204,8 +208,8 @@ app.post("/verify", async (req, res) => {
     console.log("decoded from token", { guildId, memberId });
     const guild = client.guilds.cache.get(guildId);
     const member = await guild.members.fetch(memberId);
-    console.log("fetched member from token", member);
-    member.walletAddress = address;
+    // member.walletAddress = address;
+
 
     const streamFlowRate = await getStreamFlowRate(
       address.toLowerCase(),
@@ -219,18 +223,18 @@ app.post("/verify", async (req, res) => {
       await member.roles.add(streamerRole);
       // reply in discord channel that role has been added
       startHereChannel.send(
-        `Hey <@${memberId}>, your wallet address has been verified and you have been given the streamer role. You can now access the #superfluid-exclusive channel.`
+        `Hey <@${memberId}>, your wallet address ${address} has been verified and you have been given the streamer role. You can now access the #superfluid-exclusive channel.`
       );
       return res.status(200).send("Success");
     } else {
       // reply in discord channel that role has not been added
       startHereChannel.send(
-        `Hey <@${memberId}>, your wallet address has been verified but You don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on goerli network is required.`
+        `Hey <@${memberId}>, your wallet address ${address} has been verified but You don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on goerli network is required.`
       );
       return res.status(200).send("Success");
     }
   } catch (err) {
-    console.log("failed ro verify user", err);
+    console.log("failed to verify user:", err);
     return res.status(500).send("Something went wrong!");
   }
 });

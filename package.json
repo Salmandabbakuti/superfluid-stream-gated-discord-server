@@ -1,6 +1,7 @@
 {
   "name": "superfluid-stream-gated-discord-server",
   "version": "1.0.0",
+  "private": true,
   "description": "A discord bot that allows users to stream gated content in exchange for Superfluid tokens",
   "main": "index.js",
   "scripts": {
