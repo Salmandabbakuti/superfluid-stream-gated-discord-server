@@ -20,6 +20,7 @@
     "@ethersproject/hash": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@ethersproject/transactions": "^5.7.0",
+    "@prisma/client": "^4.13.0",
     "@superfluid-finance/sdk-core": "^0.6.3",
     "cors": "^2.8.5",
     "discord.js": "^14.9.0",
@@ -29,6 +30,7 @@
     "node-cron": "^3.0.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "prisma": "^4.13.0"
   }
 }

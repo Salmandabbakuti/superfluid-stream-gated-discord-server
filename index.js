@@ -11,6 +11,7 @@ const express = require("express");
 const cors = require("cors");
 const app = express();
 require("dotenv").config();
+const prisma = require("./prisma");
 
 const {
   BOT_TOKEN,
@@ -82,23 +83,33 @@ cron.schedule("0 0 * * *", async () => {
     (role) => role.name === "streamer"
   );
   console.log("streamer role", streamerRole);
-  const members = await guild.members.fetch({
-    force: true
-  });
-  const membersWithRole = members.filter((member) => member.roles.cache.has(streamerRole.id)).values();
-  console.log("membersWithRole", membersWithRole);
 
-  for await (const member of membersWithRole) {
-    console.log("here..");
-    const userAddress = member.nickname || "";
-    console.log("userAddress", userAddress);
+  const memebersWithStreamerRole = await prisma.member.findMany({
+    where: {
+      role: "streamer"
+    }
+  });
+
+  console.log("memebersWithStreamerRole", memebersWithStreamerRole);
+
+  for await (const member of memebersWithStreamerRole) {
     const streamFlowRate = await getStreamFlowRate(
-      userAddress.toLowerCase(),
+      member.walletAddress || "0x0",
       SERVER_ADMIN_ADDRESS
     );
-    console.log(`Current flow rate for ${userAddress} is ${streamFlowRate} DAIx/sec`);
+    console.log(`Current flow rate for ${member.walletAddress} is ${streamFlowRate} DAIx/sec`);
     if (streamFlowRate < REQUIRED_MINIMUM_FLOW_RATE) {
-      await member.roles.remove(streamerRole);
+      const guildMember = await guild.members.fetch(member.id);
+      await guildMember.roles.remove(streamerRole);
+      console.log("removed role from member", guildMember.user.tag);
+      await prisma.member.update({
+        where: {
+          id: member.id
+        },
+        data: {
+          role: "member"
+        }
+      });
     }
   }
   console.log("done checking streams and removing roles");
@@ -209,7 +220,20 @@ app.post("/verify", async (req, res) => {
     const guild = client.guilds.cache.get(guildId);
     const member = await guild.members.fetch(memberId);
     // member.walletAddress = address;
-
+    await prisma.member.upsert({
+      where: {
+        id: memberId
+      },
+      update: {
+        walletAddress: address,
+        role: "streamer"
+      },
+      create: {
+        id: memberId,
+        walletAddress: address,
+        role: "streamer"
+      }
+    });
 
     const streamFlowRate = await getStreamFlowRate(
       address.toLowerCase(),

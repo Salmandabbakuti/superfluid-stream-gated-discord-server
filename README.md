@@ -29,7 +29,6 @@ This project aims to gate Discord server/channels with Superfluid streams. Exclu
 
 https://user-images.githubusercontent.com/29351207/233788169-678f5062-86d6-4162-a683-871d20cf6b98.mp4
 
-
 ## Getting Started (as Developer)
 
 ### Prerequisites
@@ -52,13 +51,17 @@ https://user-images.githubusercontent.com/29351207/233788169-678f5062-86d6-4162-
 
 3. Replace `.env.example` with `.env` and fill in the environment variables.
 
-4. Deploy slash commands by running `npm run commands:deploy` in the root directory
+4. Install dependencies by running `npm install` in the root directory
 
-5. Start the bot by running `npm start` in the root directory
+5. Sync the local schema to database by running `npx prisma db push` in the root directory
 
-6. Test the bot by typing `/verify` in the `#start-here` channel.
+6. Deploy slash commands by running `npm run commands:deploy` in the root directory
 
-7. If the bot is working correctly, you should see the `streamer` role being assigned to users(ofcourse only if they stream required amount) and the `#superfluid-exclusive` channel being unlocked.
+7. Start the bot by running `npm start` in the root directory
+
+8. Test the bot by typing `/verify` in the `#start-here` channel.
+
+9. If the bot is working correctly, you should see the `streamer` role being assigned to users(ofcourse only if they stream required amount) upon verifying wallet and the `#superfluid-exclusive` channel being unlocked.
 
 ### Troubleshooting
 
