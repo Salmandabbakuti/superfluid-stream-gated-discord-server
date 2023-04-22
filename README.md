@@ -25,6 +25,11 @@ This project aims to gate Discord server/channels with Superfluid streams. Exclu
 
 7. If the stream is present, you will be assigned the `streamer` role and gain access to the exclusive channels and perks on the server.
 
+### Demo
+
+https://user-images.githubusercontent.com/29351207/233788169-678f5062-86d6-4162-a683-871d20cf6b98.mp4
+
+
 ## Getting Started (as Developer)
 
 ### Prerequisites
