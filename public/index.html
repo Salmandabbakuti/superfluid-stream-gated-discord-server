@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Superfluid Streamer Portal</title>
+  <title>Superfluid Gated Discord Streamer Portal</title>
   <script src="https://cdn.ethers.io/lib/ethers-5.0.umd.min.js"></script>
   <style>
     #band {
@@ -54,6 +54,19 @@
       max-width: 900px;
     }
 
+    #log {
+      padding: 2rem;
+      font-size: 26px;
+      margin: 1.2rem auto;
+      text-align: center;
+      color: #0070f3;
+      text-decoration: none;
+      border: 1px solid #eaeaea;
+      border-radius: 10px;
+      transition: color 0.15s ease, border-color 0.15s ease;
+      max-width: 900px;
+    }
+
     @media screen and (max-width: 768px) {
       .container {
         max-width: 90%;
@@ -73,7 +86,7 @@
 
 <body>
   <header>
-    <h1>Superfluid Streamer Portal</h1>
+    <h1>Superfluid Gated Discord Streamer Portal</h1>
     <nav>
       <ul>
         <li><a href="#">Home</a></li>
@@ -84,10 +97,15 @@
   </header>
   <div id="band"></div>
   <h2>Stream with Superfluid, Join the Exclusive Gated Discord Channel</h2>
-  <h4>Unlock exclusive content and perks on Superfluid Stream Gated Discord Channel with your crypto wallet</h4>
+  <h4>
+    Unlock exclusive content and perks on Superfluid Stream Gated Discord
+    Channel with your crypto wallet
+  </h4>
   <div class="container">
     <button onclick="authorize()">Authorize with Wallet</button>
-    <div id="log"></div>
+    <div id="log">
+      Hey there! Are you ready to authorize? Let's do this, ser!👋
+    </div>
   </div>
 
   <script>
@@ -97,6 +115,9 @@
 
     async function authorize() {
       if (!token) {
+        console.log(
+          "Oh great, another user trying to authorize without a token. Let's just print some error messages and see if they notice... 🙄"
+        );
         return (logDiv.innerHTML =
           "No JWT token provided. Please use the link provided by SuperApp Bot");
       }
@@ -104,6 +125,8 @@
         return (logDiv.innerHTML =
           "Please use a Web3 browser like MetaMask to connect your wallet");
       try {
+        logDiv.innerHTML =
+          "Please wait while we authorize your request... We've sent out our highly trained monkeys to get the job done. They're currently working on it, so just sit back and relax for a moment! 🐒🍌";
         const [address] = await window.ethereum.request({
           method: "eth_requestAccounts"
         });
@@ -119,7 +142,7 @@
         ].join("\n\n");
         const signature = await signer.signMessage(message);
         const data = { token, address, message, signature };
-        const response = await fetch("http://localhost:3000/verify", {
+        const response = await fetch("/verify", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
@@ -143,7 +166,7 @@
 
 <footer>
   <hr />
-  <h5 style="text-align: right;">&copy Salman Dabbakuti </h5>
+  <h5 style="text-align: right">&copy Salman Dabbakuti</h5>
 </footer>
 
 </html>

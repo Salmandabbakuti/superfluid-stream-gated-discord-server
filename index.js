@@ -25,6 +25,7 @@ const {
 } = require("./config.js");
 
 app.use(express.json());
+app.use(express.static(__dirname + "/public"));
 app.use(
   cors({
     origin: "*",
@@ -169,7 +170,8 @@ client.on("interactionCreate", async (interaction) => {
     });
   } else {
     interaction.reply({
-      content: "I don't know what you mean. I can only respond to the following commands: /verify, /ping",
+      content:
+        "I don't know what you mean. I can only respond to the following commands: /verify, /ping",
       ephemeral: true
     });
   }
@@ -232,6 +234,11 @@ app.post("/verify", async (req, res) => {
     return res.status(500).send("Something went wrong!");
   }
 });
+
+app.get("/", (req, res) => {
+  res.send(__dirname + "/public/index.html");
+});
+
 app.listen(port, () => {
   console.log(`Server listening at http://localhost:${port}`);
 });
