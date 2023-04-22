@@ -7,7 +7,7 @@ This project aims to gate Discord server/channels with Superfluid streams. Exclu
 1. A Discord account
 2. Understanding of the Superfluid protocol and how to stream tokens
 3. An Ethereum wallet with some tokens to stream. You can get some test tokens from the [Superfluid faucet](https://app.superfluid.finance/).
-4. Stream a minimum of 0.5DAIx/month to the server admin account `0x7348943c8d263ea253c0541656c36b88becd77b9` on `goerli` testnet. You can use the [Superfluid app](https://app.superfluid.finance/) to do this.
+4. Stream a minimum of `0.5DAIx/month` to the server admin account `0x7348943c8d263ea253c0541656c36b88becd77b9` on `goerli` testnet. You can use the [Superfluid app](https://app.superfluid.finance/) to do this.
 
 ### Steps:
 
@@ -35,11 +35,11 @@ This project aims to gate Discord server/channels with Superfluid streams. Exclu
 
 ### Steps:
 
-1. Create a new Discord server and create the necessary channels(`#start-here`, `#superfluid-exclusive`) and roles(`streamer`, `member`). `#start-here` channel should be the first channel in the server. `#superfluid-eclusive` is the channel where we want to gate the server. so make sure in the channel `settings` > `permisions`, the `@everyone` role does not have access to the channel. only the `streamer` role should have access to the channel.
+1. Create a new Discord server and create the necessary channels(`#start-here`, `#superfluid-exclusive`) and roles(`streamer`, `member`). `#start-here` channel should be the first channel in the server. `#superfluid-exclusive` is the channel where we want to gate the server. so make sure in the channel `settings` > `permisions`, the `@everyone` role does not have access to the channel. only the `streamer` role should have access to the channel.
 
 ![sf-exclusive-permissions](https://user-images.githubusercontent.com/29351207/233772777-4ca61378-8406-4a09-b9a9-35f051fb284f.png)
 
-2. Create a new Discord bot [Discord Dveleoper Portal](https://discord.com/developers/applications) with necessary permissions and invite it to the server.
+2. Create a new Discord bot [Discord Developer Portal](https://discord.com/developers/applications) with necessary permissions and invite it to the server.
 
 ![sf-bot-intents](https://user-images.githubusercontent.com/29351207/233772853-9c023857-2fe8-4461-8916-d160b9cbb9fa.png)
 

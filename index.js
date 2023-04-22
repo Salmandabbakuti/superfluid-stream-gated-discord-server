@@ -165,7 +165,7 @@ client.on("interactionCreate", async (interaction) => {
   } else if (interaction.commandName === "ping") {
     interaction.reply({
       content: "Pong!",
-      ephemeral: flase
+      ephemeral: false
     });
   } else {
     interaction.reply({
