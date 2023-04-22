@@ -12,6 +12,18 @@ const cors = require("cors");
 const app = express();
 require("dotenv").config();
 
+const {
+  BOT_TOKEN,
+  RPC_URL,
+  JWT_SECRET,
+  START_HERE_CHANNEL_ID,
+  SERVER_GUILD_ID,
+  SERVER_ADMIN_ADDRESS,
+  SUPER_DAI_ADDRESS,
+  REQUIRED_MINIMUM_FLOW_RATE,
+  APP_URL
+} = require("./config.js");
+
 app.use(express.json());
 app.use(
   cors({
@@ -20,13 +32,7 @@ app.use(
   })
 );
 
-const START_HERE_CHANNEL_ID = "1098594000585379934";
-const SERVER_GUILD_ID = "1098594000115597353";
-const SERVER_ADMIN_ADDRESS = "0x7348943c8d263ea253c0541656c36b88becd77b9";
-const SUPER_DAI_ADDRESS = "0xF2d68898557cCb2Cf4C10c3Ef2B034b2a69DAD00";
-const REQUIRED_MINIMUM_FLOW_RATE = 192901234567; // 192901234567 is 0.5 DAIx/month to consider access to the channel. we can think of it as a subscription to access channel content
-const APP_URL = "http://localhost:8080";
-const provider = new JsonRpcProvider(process.env.RPC_URL);
+const provider = new JsonRpcProvider(RPC_URL);
 
 const isAddressValid = (address) => {
   try {
@@ -56,15 +62,13 @@ const getStreamFlowRate = async (sender, receiver) => {
   }
 };
 
-const joinCommandResponse = (msg) => {
-  // prepare jwt token with guidid, memberid and user address
-  const token = jwt.sign(
-    { guildId: msg.guildId, memberId: msg.member.id },
-    process.env.JWT_SECRET,
+const generateJwtToken = (interaction) => {
+  // prepare jwt token with guidid, memberid
+  return jwt.sign(
+    { guildId: interaction.guildId, memberId: interaction.member.id },
+    JWT_SECRET,
     { expiresIn: 10 * 60 * 1000 } // 10 minutes
   );
-  // send message with link to app url with token
-  return `Please visit ${APP_URL}/?token=${token} to verify your wallet address and join the server`;
 };
 
 cron.schedule("0 0 * * *", async () => {
@@ -102,7 +106,7 @@ const client = new Client({
     GatewayIntentBits.MessageContent
   ]
 });
-client.login(process.env.BOT_TOKEN);
+client.login(BOT_TOKEN);
 
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
@@ -121,8 +125,7 @@ client.on("messageCreate", async (msg) => {
       [
         "time date",
         `The time is ${new Date().toLocaleTimeString()} and the date is ${new Date().toLocaleDateString()}`
-      ],
-      ["/join", joinCommandResponse(msg)]
+      ]
     ];
     const command = commands.find((c) => c[0] === msg.content.toLowerCase());
     if (command) {
@@ -134,6 +137,41 @@ client.on("messageCreate", async (msg) => {
           .join(", ")}`
       );
     }
+  }
+});
+
+client.on("interactionCreate", async (interaction) => {
+  console.log("interaction", interaction);
+  if (!interaction.isCommand())
+    return interaction.reply(
+      "I don't know what you mean. I can only respond to the following commands: /verify, /ping"
+    );
+  if (interaction.commandName === "verify") {
+    const jwtToken = generateJwtToken(interaction);
+    const greeting = "Hello there!";
+    const steps = [
+      `Please visit ${APP_URL}/?token=${jwtToken} to verify your wallet address.`,
+      "Make sure you have a minimum of 0.5 DAIx/month streaming to our server admin account on goerli network",
+      "Once verified, you'll be automatically assigned the Streamer role which will give you access to our exclusive channels and perks!"
+    ];
+    const outro =
+      "If you have any questions or encounter any issues, please don't hesitate to reach out to us. Good luck and have fun!";
+    const message = greeting + "\n\n" + steps.join("\n") + "\n\n" + outro;
+
+    interaction.reply({
+      content: message,
+      ephemeral: true
+    });
+  } else if (interaction.commandName === "ping") {
+    interaction.reply({
+      content: "Pong!",
+      ephemeral: flase
+    });
+  } else {
+    interaction.reply({
+      content: "I don't know what you mean. I can only respond to the following commands: /verify, /ping",
+      ephemeral: true
+    });
   }
 });
 
@@ -149,24 +187,23 @@ app.post("/verify", async (req, res) => {
   if (
     ["token", "address", "message", "signature"].some((key) => !req.body[key])
   )
-    return res.status(400).send("Missing required parameters: token, address, message, signature");
+    return res
+      .status(400)
+      .send("Missing required parameters: token, address, message, signature");
   const { token, address, message, signature } = req.body;
   try {
+    console.log("verifying signature and checking stream");
     const digest = arrayify(hashMessage(message));
     const recoveredAddress = recoverAddress(digest, signature);
     if (recoveredAddress.toLowerCase() !== address.toLowerCase())
       return res.status(401).send("Invalid signature");
     // update member object with wallet address
-    const { guildId, memberId } = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("rrrr", guildId, memberId);
+    const { guildId, memberId } = jwt.verify(token, JWT_SECRET);
+    console.log("decoded from token", { guildId, memberId });
     const guild = client.guilds.cache.get(guildId);
     const member = await guild.members.fetch(memberId);
-    console.log("member rrr", member);
-    // console.log("streamerRole", streamerRole);
+    console.log("fetched member from token", member);
     member.walletAddress = address;
-    // console.log("member", member);
-    // console.log("streamerRole", streamerRole);
-    // add wallet address to member object
 
     const streamFlowRate = await getStreamFlowRate(
       address.toLowerCase(),
@@ -191,7 +228,7 @@ app.post("/verify", async (req, res) => {
       return res.status(200).send("Success");
     }
   } catch (err) {
-    console.log("err", err);
+    console.log("failed ro verify user", err);
     return res.status(500).send("Something went wrong!");
   }
 });

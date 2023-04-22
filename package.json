@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon -x node index.js --ext js",
-    "start": "node index.js"
+    "start": "node index.js",
+    "commands:deploy": "node deploy-commands.js"
   },
   "keywords": [],
   "author": "Salman Dabbakuti",
