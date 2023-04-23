@@ -29,7 +29,7 @@ I have also implemented periodic checks to ensure a stream is not terminated or 
 
 ### Demo
 
-https://user-images.githubusercontent.com/29351207/233788169-678f5062-86d6-4162-a683-871d20cf6b98.mp4
+https://user-images.githubusercontent.com/29351207/233840689-38bf645d-cb28-4e95-9545-6804c00f9da3.mp4
 
 ## Getting Started (as Developer)
 
