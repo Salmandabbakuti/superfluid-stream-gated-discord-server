@@ -205,15 +205,14 @@ app.post("/verify", async (req, res) => {
     ["token", "address", "message", "signature"].some((key) => !req.body[key])
   )
     return res
-      .status(400)
-      .send("Missing required parameters: token, address, message, signature");
+      .status(400).json({ code: "Bad Request", message: "Missing required fields: token,address,message,signature" });
   const { token, address, message, signature } = req.body;
   try {
     console.log("verifying signature and checking stream");
     const digest = arrayify(hashMessage(message));
     const recoveredAddress = recoverAddress(digest, signature);
     if (recoveredAddress.toLowerCase() !== address.toLowerCase())
-      return res.status(401).send("Invalid signature");
+      return res.status(401).send({ code: "Unauthorized", message: "Invalid wallet signature" });
     // update member object with wallet address
     const { guildId, memberId } = jwt.verify(token, JWT_SECRET);
     console.log("decoded from token", { guildId, memberId });
@@ -249,17 +248,17 @@ app.post("/verify", async (req, res) => {
       startHereChannel.send(
         `Hey <@${memberId}>, your wallet address ${address} has been verified and you have been given the streamer role. You can now access the #superfluid-exclusive channel.`
       );
-      return res.status(200).send("Success");
+      return res.status(200).json({ code: "ok", message: "Success" });
     } else {
       // reply in discord channel that role has not been added
       startHereChannel.send(
         `Hey <@${memberId}>, your wallet address ${address} has been verified but You don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on goerli network is required.`
       );
-      return res.status(200).send("Success");
+      return res.status(200).json({ code: "ok", message: "Success" });
     }
   } catch (err) {
     console.log("failed to verify user:", err);
-    return res.status(500).send("Something went wrong!");
+    return res.status(500).json({ code: "Internal Server Error", message: err.message });
   }
 });
 
