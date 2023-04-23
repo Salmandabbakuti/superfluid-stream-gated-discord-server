@@ -6,7 +6,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon -x node index.js --ext js",
+    "dev": "nodemon -x node --inspect index.js --ext js",
     "start": "node index.js",
     "commands:deploy": "node deploy-commands.js"
   },
@@ -14,7 +14,6 @@
   "author": "Salman Dabbakuti",
   "license": "ISC",
   "dependencies": {
-    "@ethersproject/address": "^5.7.0",
     "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/contracts": "^5.7.0",
     "@ethersproject/hash": "^5.7.0",

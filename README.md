@@ -2,6 +2,8 @@
 
 This project aims to gate Discord server/channels with Superfluid streams. Exclusive channel content and perks can be accessed by users who are streaming super tokens to the server admin account through the Superfluid protocol.
 
+I have also implemented periodic checks to ensure a stream is not terminated or flowRate is reduced for each user with the `streamer` role and remove the role if the stream is terminated or flowRate is reduced. This helps to ensure that only active streamers have access to our exclusive channels and perks.
+
 ### Prerequisites
 
 1. A Discord account
@@ -11,7 +13,7 @@ This project aims to gate Discord server/channels with Superfluid streams. Exclu
 
 ### Steps:
 
-1. Join the [TechNow Discord Server](https://discord.gg/JEMFf5ux5M)
+1. Join the TechNow Discord Server: https://discord.gg/JEMFf5ux5M
 
 2. Make sure you are streaming a minimum of `0.5 DAIx/month` to `0x7348943c8d263ea253c0541656c36b88becd77b9` on `goerli`.
 

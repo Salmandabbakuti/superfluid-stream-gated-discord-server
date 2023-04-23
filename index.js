@@ -5,7 +5,6 @@ const {
   ActionRowBuilder,
   ButtonStyle
 } = require("discord.js");
-const { getAddress } = require("@ethersproject/address");
 const { recoverAddress } = require("@ethersproject/transactions");
 const { arrayify } = require("@ethersproject/bytes");
 const { hashMessage } = require("@ethersproject/hash");
@@ -42,15 +41,6 @@ app.use(
 
 const provider = new JsonRpcProvider(RPC_URL);
 
-const isAddressValid = (address) => {
-  try {
-    getAddress(address);
-    return true;
-  } catch (error) {
-    return false;
-  }
-};
-
 const getStreamFlowRate = async (sender, receiver) => {
   try {
     const sf = await Framework.create({
@@ -70,17 +60,17 @@ const getStreamFlowRate = async (sender, receiver) => {
   }
 };
 
-const generateJwtToken = (interaction) => {
-  // prepare jwt token with guidid, memberid
+const generateJwtToken = (payload) => {
+  // prepare jwt token with payload: guildId, memberId
   return jwt.sign(
-    { guildId: interaction.guildId, memberId: interaction.member.id },
+    payload,
     JWT_SECRET,
     { expiresIn: "5m" } // 5 minutes
   );
 };
 
+// Periodic cron job to check streams and remove roles if stream is not present or active
 cron.schedule("0 0 * * *", async () => {
-  // code to check streams and remove role goes here
   console.log(
     "running cron job to check streams and remove roles if stream is not active"
   );
@@ -88,15 +78,12 @@ cron.schedule("0 0 * * *", async () => {
   const streamerRole = guild.roles.cache.find(
     (role) => role.name === "streamer"
   );
-  console.log("streamer role", streamerRole);
 
   const memebersWithStreamerRole = await prisma.member.findMany({
     where: {
       role: "streamer"
     }
   });
-
-  console.log("memebersWithStreamerRole", memebersWithStreamerRole);
 
   for await (const member of memebersWithStreamerRole) {
     const streamFlowRate = await getStreamFlowRate(
@@ -120,7 +107,7 @@ cron.schedule("0 0 * * *", async () => {
       });
     }
   }
-  console.log("done checking streams and removing roles");
+  console.log("Done checking streams and removing roles");
 });
 
 const client = new Client({
@@ -138,7 +125,7 @@ client.on("ready", () => {
 });
 
 client.on("messageCreate", async (msg) => {
-  if (msg.author.bot || msg.channel.type === "DM") return;
+  if (msg.author.bot || msg.system || msg.channel.type === "DM") return;
   if (msg.channelId === START_HERE_CHANNEL_ID) {
     // Basic command handler
     const commands = [
@@ -171,7 +158,7 @@ client.on("interactionCreate", async (interaction) => {
       "I don't know what you mean. I can only respond to the following commands: /verify, /ping"
     );
   if (interaction.commandName === "verify") {
-    const jwtToken = generateJwtToken(interaction);
+    const jwtToken = generateJwtToken({ guildId: interaction.guildId, memberId: interaction.member.id });
     const greeting = "Hello there! Welcome to the server!";
     const steps = [
       `Please Click on Verify with Wallet to verify your wallet address.`,
@@ -181,11 +168,11 @@ client.on("interactionCreate", async (interaction) => {
     const outro =
       "If you have any questions or encounter any issues, please don't hesitate to reach out to us. Good luck and have fun!";
     const message = greeting + "\n\n" + steps.join("\n") + "\n\n" + outro;
-    const connectButton = new ButtonBuilder()
+    const verifyWithWalletButton = new ButtonBuilder()
       .setLabel("Verify with Wallet")
       .setStyle(ButtonStyle.Link)
-      .setURL(`${APP_URL}/?token=${jwtToken}`);
-    const actionRow = new ActionRowBuilder().addComponents(connectButton);
+      .setURL(`${APP_URL}?token=${jwtToken}`);
+    const actionRow = new ActionRowBuilder().addComponents(verifyWithWalletButton);
     interaction.reply({
       content: message,
       components: [actionRow],
