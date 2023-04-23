@@ -157,8 +157,8 @@ client.on("interactionCreate", async (interaction) => {
     const greeting = "Hello there! Welcome to the server!";
     const steps = [
       `Please Click on Verify with Wallet to verify your wallet address.`,
-      `Make sure you have a minimum of 0.5 DAIx/month streaming to our server admin account: ${SERVER_ADMIN_ADDRESS} on goerli network`,
-      "Once verified, you'll be automatically assigned the Streamer role which will give you access to our exclusive channels and perks!"
+      `Make sure you have a minimum of 0.5 DAIx/month stream to our server admin account: ${SERVER_ADMIN_ADDRESS} on goerli network`,
+      "Once verified, you'll be automatically assigned the streamer role which will give you access to our exclusive channels and perks!"
     ];
     const outro =
       "If you have any questions or encounter any issues, please don't hesitate to reach out to us. Good luck and have fun!";

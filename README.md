@@ -2,7 +2,7 @@
 
 This project aims to gate Discord server/channels with Superfluid streams. Exclusive channel content and perks can be accessed by users who are streaming super tokens to the server admin account through the Superfluid protocol.
 
-I have also implemented periodic checks to ensure a stream is not terminated or flowRate is reduced for each user with the `streamer` role and remove the role if the stream is terminated or flowRate is reduced. This helps to ensure that only active streamers have access to our exclusive channels and perks.
+I also implemented periodic checks to ensure that all users with the `streamer` role are actively streaming to our server admin. If a user's stream is terminated or their flow rate is reduced, bot automatically removes the `streamer` role from their account to prevent them from accessing our exclusive channels and perks until they start streaming again.
 
 ### Prerequisites
 
