@@ -14,10 +14,9 @@ const cron = require("node-cron");
 const jwt = require("jsonwebtoken");
 const express = require("express");
 const cors = require("cors");
-const app = express();
 require("dotenv").config();
-const prisma = require("./prisma");
 
+const prisma = require("./prisma");
 const {
   BOT_TOKEN,
   RPC_URL,
@@ -30,6 +29,7 @@ const {
   APP_URL
 } = require("./config.js");
 
+const app = express();
 app.use(express.json());
 app.use(express.static(__dirname + "/public"));
 app.use(
@@ -58,15 +58,6 @@ const getStreamFlowRate = async (sender, receiver) => {
     console.log("err getting flow info", error);
     return 0;
   }
-};
-
-const generateJwtToken = (payload) => {
-  // prepare jwt token with payload: guildId, memberId
-  return jwt.sign(
-    payload,
-    JWT_SECRET,
-    { expiresIn: "5m" } // 5 minutes
-  );
 };
 
 // Periodic cron job to check streams and remove roles if stream is not present or active
@@ -158,7 +149,11 @@ client.on("interactionCreate", async (interaction) => {
       "I don't know what you mean. I can only respond to the following commands: /verify, /ping"
     );
   if (interaction.commandName === "verify") {
-    const jwtToken = generateJwtToken({ guildId: interaction.guildId, memberId: interaction.member.id });
+    const jwtToken = jwt.sign(
+      { guildId: interaction.guildId, memberId: interaction.member.id },
+      JWT_SECRET,
+      { expiresIn: "5m" } // 5 minutes
+    );
     const greeting = "Hello there! Welcome to the server!";
     const steps = [
       `Please Click on Verify with Wallet to verify your wallet address.`,
