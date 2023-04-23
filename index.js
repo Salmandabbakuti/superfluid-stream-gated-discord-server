@@ -1,4 +1,10 @@
-const { Client, GatewayIntentBits } = require("discord.js");
+const {
+  Client,
+  GatewayIntentBits,
+  ButtonBuilder,
+  ActionRowBuilder,
+  ButtonStyle
+} = require("discord.js");
 const { getAddress } = require("@ethersproject/address");
 const { recoverAddress } = require("@ethersproject/transactions");
 const { arrayify } = require("@ethersproject/bytes");
@@ -97,7 +103,9 @@ cron.schedule("0 0 * * *", async () => {
       member.walletAddress || "0x0",
       SERVER_ADMIN_ADDRESS
     );
-    console.log(`Current flow rate for ${member.walletAddress} is ${streamFlowRate} DAIx/sec`);
+    console.log(
+      `Current flow rate for ${member.walletAddress} is ${streamFlowRate} DAIx/sec`
+    );
     if (streamFlowRate < REQUIRED_MINIMUM_FLOW_RATE) {
       const guildMember = await guild.members.fetch(member.id);
       await guildMember.roles.remove(streamerRole);
@@ -164,18 +172,23 @@ client.on("interactionCreate", async (interaction) => {
     );
   if (interaction.commandName === "verify") {
     const jwtToken = generateJwtToken(interaction);
-    const greeting = "Hello there!";
+    const greeting = "Hello there! Welcome to the server!";
     const steps = [
-      `Please visit ${APP_URL}/?token=${jwtToken} to verify your wallet address.`,
-      "Make sure you have a minimum of 0.5 DAIx/month streaming to our server admin account on goerli network",
+      `Please Click on Verify with Wallet to verify your wallet address.`,
+      `Make sure you have a minimum of 0.5 DAIx/month streaming to our server admin account: ${SERVER_ADMIN_ADDRESS} on goerli network`,
       "Once verified, you'll be automatically assigned the Streamer role which will give you access to our exclusive channels and perks!"
     ];
     const outro =
       "If you have any questions or encounter any issues, please don't hesitate to reach out to us. Good luck and have fun!";
     const message = greeting + "\n\n" + steps.join("\n") + "\n\n" + outro;
-
+    const connectButton = new ButtonBuilder()
+      .setLabel("Verify with Wallet")
+      .setStyle(ButtonStyle.Link)
+      .setURL(`${APP_URL}/?token=${jwtToken}`);
+    const actionRow = new ActionRowBuilder().addComponents(connectButton);
     interaction.reply({
       content: message,
+      components: [actionRow],
       ephemeral: true
     });
   } else if (interaction.commandName === "ping") {
@@ -205,14 +218,20 @@ app.post("/verify", async (req, res) => {
     ["token", "address", "message", "signature"].some((key) => !req.body[key])
   )
     return res
-      .status(400).json({ code: "Bad Request", message: "Missing required fields: token,address,message,signature" });
+      .status(400)
+      .json({
+        code: "Bad Request",
+        message: "Missing required fields: token,address,message,signature"
+      });
   const { token, address, message, signature } = req.body;
   try {
     console.log("verifying signature and checking stream");
     const digest = arrayify(hashMessage(message));
     const recoveredAddress = recoverAddress(digest, signature);
     if (recoveredAddress.toLowerCase() !== address.toLowerCase())
-      return res.status(401).send({ code: "Unauthorized", message: "Invalid wallet signature" });
+      return res
+        .status(401)
+        .send({ code: "Unauthorized", message: "Invalid wallet signature" });
     // update member object with wallet address
     const { guildId, memberId } = jwt.verify(token, JWT_SECRET);
     console.log("decoded from token", { guildId, memberId });
@@ -258,7 +277,9 @@ app.post("/verify", async (req, res) => {
     }
   } catch (err) {
     console.log("failed to verify user:", err);
-    return res.status(500).json({ code: "Internal Server Error", message: err.message });
+    return res
+      .status(500)
+      .json({ code: "Internal Server Error", message: err.message });
   }
 });
 
