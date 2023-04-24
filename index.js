@@ -119,26 +119,19 @@ client.on("messageCreate", async (msg) => {
   if (msg.author.bot || msg.system || msg.channel.type === "DM") return;
   if (msg.channelId === START_HERE_CHANNEL_ID) {
     // Basic command handler
-    const commands = [
-      ["ping", "pong"],
-      ["pong", "ping"],
-      ["ping pong", "pong ping"],
-      ["time", new Date().toLocaleTimeString()],
-      ["date", new Date().toLocaleDateString()],
-      [
-        "time date",
-        `The time is ${new Date().toLocaleTimeString()} and the date is ${new Date().toLocaleDateString()}`
-      ]
-    ];
-    const command = commands.find((c) => c[0] === msg.content.toLowerCase());
-    if (command) {
-      msg.reply(command[1]);
+    const commands = {
+      ping: "pong",
+      pong: "ping",
+      "ping pong": "pong ping",
+      date: new Date().toUTCString(),
+    };
+
+    const commandResponse = commands[msg.content.toLowerCase()];
+    if (commandResponse) {
+      msg.reply(commandResponse);
     } else {
-      msg.reply(
-        `I don't know what you mean. I can only respond to the following commands: ${commands
-          .map((c) => c[0])
-          .join(", ")}`
-      );
+      const possibleCommands = ["/ping", "/verify", ...Object.keys(commands)].join(", ");
+      msg.reply(`I don't know what you mean. I can only respond to the following commands: ${possibleCommands}`);
     }
   }
 });
@@ -175,8 +168,8 @@ client.on("interactionCreate", async (interaction) => {
     });
   } else if (interaction.commandName === "ping") {
     interaction.reply({
-      content: "Pong!",
-      ephemeral: false
+      content: "pong!",
+      ephemeral: true
     });
   } else {
     interaction.reply({
@@ -203,7 +196,7 @@ app.post("/verify", async (req, res) => {
       .status(400)
       .json({
         code: "Bad Request",
-        message: "Missing required fields: token,address,message,signature"
+        message: "Missing required fields: token/address/message/signature"
       });
   const { token, address, message, signature } = req.body;
   try {

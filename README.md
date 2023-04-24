@@ -1,8 +1,6 @@
 # Superfluid Stream Gated Discord Server
 
-This project aims to gate Discord server/channels with Superfluid streams. Exclusive channel content and perks can be accessed by users who are streaming super tokens to the server admin account through the Superfluid protocol.
-
-I also implemented periodic checks to ensure that all users with the `streamer` role are actively streaming to our server admin. If a user's stream is terminated or their flow rate is reduced, bot automatically removes the `streamer` role from their account to prevent them from accessing our exclusive channels and perks until they start streaming again.
+This project aims to gate a Discord server/channels with Superfluid streams. Exclusive channel content and perks can be accessed by users who are streaming super tokens to the server admin account through the Superfluid protocol. This project also includes periodic checks to ensure that all users with the `streamer` role are actively streaming to our server admin. If a user's stream is terminated or their flow rate is reduced, The bot will automatically remove the `streamer` role from their account to prevent them from accessing our exclusive channels and perks until they start streaming again.
 
 ### Prerequisites
 
@@ -84,6 +82,7 @@ If you encounter any issues with the bot, please do the following:
 - [Superfluid Wavepool ideas](https://superfluidhq.notion.site/Superfluid-Wave-Project-Ideas-7e8c792758004bd2ae452d1f9810cc58)
 - [Discord.js](https://discordjs.guide/)
 - [Superfluid Guides](https://docs.superfluid.finance/superfluid/resources/integration-guides)
+- [Prisma](https://www.prisma.io/docs)
 
 ## Safety
 
