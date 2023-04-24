@@ -60,45 +60,74 @@ const getStreamFlowRate = async (sender, receiver) => {
   }
 };
 
-// Periodic cron job to check streams and remove roles if stream is not present or active
+// Periodic cron job to check streams and add/remove roles accordingly
 cron.schedule("0 0 * * *", async () => {
   console.log(
-    "running cron job to check streams and remove roles if stream is not active"
+    `Checking streams and adding/removing roles at ${new Date().toUTCString()}`
   );
   const guild = client.guilds.cache.get(SERVER_GUILD_ID);
   const streamerRole = guild.roles.cache.find(
     (role) => role.name === "streamer"
   );
 
-  const memebersWithStreamerRole = await prisma.member.findMany({
-    where: {
-      role: "streamer"
-    }
-  });
+  const members = await prisma.member.findMany();
 
-  for await (const member of memebersWithStreamerRole) {
-    const streamFlowRate = await getStreamFlowRate(
-      member.walletAddress || "0x0",
-      SERVER_ADMIN_ADDRESS
-    );
-    console.log(
-      `Current flow rate for ${member.walletAddress} is ${streamFlowRate} DAIx/sec`
-    );
-    if (streamFlowRate < REQUIRED_MINIMUM_FLOW_RATE) {
+  await Promise.all(
+    members.map(async (member) => {
+      const streamFlowRate = await getStreamFlowRate(
+        member.walletAddress || "0x0",
+        SERVER_ADMIN_ADDRESS
+      );
       const guildMember = await guild.members.fetch(member.id);
-      await guildMember.roles.remove(streamerRole);
-      console.log("removed role from member", guildMember.user.tag);
-      await prisma.member.update({
-        where: {
-          id: member.id
-        },
-        data: {
-          role: "member"
+      console.log(
+        `Current flow rate for ${guildMember.user.tag} with wallet ${member.walletAddress} is ${streamFlowRate} DAIx/sec`
+      );
+      const currentRole = member.role;
+      let updatedRole = currentRole;
+      if (streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE) {
+        if (currentRole !== "streamer") {
+          // add streamer role
+          await guildMember.roles
+            .add(streamerRole)
+            .catch((err) => console.log("failed to add role", err));
+          updatedRole = "streamer";
+          console.log("added streamer role to member", guildMember.user.tag);
+        } else {
+          console.log(
+            `Stream is active for streamer: ${guildMember.user.tag}. No role changes required.`
+          );
         }
-      });
-    }
-  }
-  console.log("Done checking streams and removing roles");
+      } else {
+        if (currentRole !== "member") {
+          // remove streamer role
+          await guildMember.roles
+            .remove(streamerRole)
+            .catch((err) => console.log("failed to remove role", err));
+          updatedRole = "member";
+          console.log(
+            "removed streamer role from member",
+            guildMember.user.tag
+          );
+        } else {
+          console.log(
+            `Stream is not active for member: ${guildMember.user.tag}. No role changes required.`
+          );
+        }
+      }
+      // update role in db if changed
+      if (updatedRole !== currentRole) {
+        await prisma.member.update({
+          where: {
+            id: member.id
+          },
+          data: {
+            role: updatedRole
+          }
+        });
+      }
+    })
+  );
+  console.log("Done checking streams and adding/removing roles");
 });
 
 const client = new Client({
@@ -123,15 +152,21 @@ client.on("messageCreate", async (msg) => {
       ping: "pong",
       pong: "ping",
       "ping pong": "pong ping",
-      date: new Date().toUTCString(),
+      date: new Date().toUTCString()
     };
 
     const commandResponse = commands[msg.content.toLowerCase()];
     if (commandResponse) {
       msg.reply(commandResponse);
     } else {
-      const possibleCommands = ["/ping", "/verify", ...Object.keys(commands)].join(", ");
-      msg.reply(`I don't know what you mean. I can only respond to the following commands: ${possibleCommands}`);
+      const possibleCommands = [
+        "/ping",
+        "/verify",
+        ...Object.keys(commands)
+      ].join(", ");
+      msg.reply(
+        `I don't know what you mean. I can only respond to the following commands: ${possibleCommands}`
+      );
     }
   }
 });
@@ -160,7 +195,9 @@ client.on("interactionCreate", async (interaction) => {
       .setLabel("Verify with Wallet")
       .setStyle(ButtonStyle.Link)
       .setURL(`${APP_URL}?token=${jwtToken}`);
-    const actionRow = new ActionRowBuilder().addComponents(verifyWithWalletButton);
+    const actionRow = new ActionRowBuilder().addComponents(
+      verifyWithWalletButton
+    );
     interaction.reply({
       content: message,
       components: [actionRow],
@@ -192,12 +229,10 @@ app.post("/verify", async (req, res) => {
   if (
     ["token", "address", "message", "signature"].some((key) => !req.body[key])
   )
-    return res
-      .status(400)
-      .json({
-        code: "Bad Request",
-        message: "Missing required fields: token/address/message/signature"
-      });
+    return res.status(400).json({
+      code: "Bad Request",
+      message: "Missing required fields: token/address/message/signature"
+    });
   const { token, address, message, signature } = req.body;
   try {
     console.log("verifying signature and checking stream");
