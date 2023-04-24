@@ -24,10 +24,21 @@ const {
   START_HERE_CHANNEL_ID,
   SERVER_GUILD_ID,
   SERVER_ADMIN_ADDRESS,
-  SUPER_DAI_ADDRESS,
+  SUPER_TOKEN_CHAIN_ID,
+  SUPER_TOKEN_ADDRESS,
   REQUIRED_MINIMUM_FLOW_RATE,
   APP_URL
 } = require("./config.js");
+
+const client = new Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent
+  ]
+});
+client.login(BOT_TOKEN);
 
 const app = express();
 app.use(express.json());
@@ -41,14 +52,21 @@ app.use(
 
 const provider = new JsonRpcProvider(RPC_URL);
 
+const chains = {
+  1: "ethereum mainnet",
+  5: "goerli",
+  80001: "polygon mumbai",
+  137: "polygon"
+};
+
 const getStreamFlowRate = async (sender, receiver) => {
   try {
     const sf = await Framework.create({
       provider,
-      chainId: 5
+      chainId: SUPER_TOKEN_CHAIN_ID
     });
     const { flowRate } = await sf.cfaV1.getFlow({
-      superToken: SUPER_DAI_ADDRESS,
+      superToken: SUPER_TOKEN_ADDRESS,
       sender,
       receiver,
       providerOrSigner: provider
@@ -130,16 +148,6 @@ cron.schedule("0 0 * * *", async () => {
   console.log("Done checking streams and adding/removing roles");
 });
 
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent
-  ]
-});
-client.login(BOT_TOKEN);
-
 client.on("ready", () => {
   console.log(`Logged in as ${client.user.tag}`);
 });
@@ -185,7 +193,7 @@ client.on("interactionCreate", async (interaction) => {
     const greeting = "Hello there! Welcome to the server!";
     const steps = [
       `Please Click on Verify with Wallet to verify your wallet address.`,
-      `Make sure you have a minimum of 0.5 DAIx/month stream to our server admin account: ${SERVER_ADMIN_ADDRESS} on goerli network`,
+      `Make sure you have a minimum of 0.5 DAIx/month stream to our server admin account: ${SERVER_ADMIN_ADDRESS} on ${chains[SUPER_TOKEN_CHAIN_ID]}`,
       "Once verified, you'll be automatically assigned the streamer role which will give you access to our exclusive channels and perks!"
     ];
     const outro =
@@ -247,28 +255,14 @@ app.post("/verify", async (req, res) => {
     console.log("decoded from token", { guildId, memberId });
     const guild = client.guilds.cache.get(guildId);
     const member = await guild.members.fetch(memberId);
-    // member.walletAddress = address;
-    await prisma.member.upsert({
-      where: {
-        id: memberId
-      },
-      update: {
-        walletAddress: address,
-        role: "streamer"
-      },
-      create: {
-        id: memberId,
-        walletAddress: address,
-        role: "streamer"
-      }
-    });
-
     const streamFlowRate = await getStreamFlowRate(
       address.toLowerCase(),
       SERVER_ADMIN_ADDRESS
     );
     const startHereChannel = guild.channels.cache.get(START_HERE_CHANNEL_ID);
-    if (streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE) {
+    const hasRequiredStream = streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE;
+
+    if (hasRequiredStream) {
       const streamerRole = guild.roles.cache.find(
         (role) => role.name === "streamer"
       );
@@ -277,14 +271,28 @@ app.post("/verify", async (req, res) => {
       startHereChannel.send(
         `Hey <@${memberId}>, your wallet address ${address} has been verified and you have been given the streamer role. You can now access the #superfluid-exclusive channel.`
       );
-      return res.status(200).json({ code: "ok", message: "Success" });
     } else {
       // reply in discord channel that role has not been added
       startHereChannel.send(
-        `Hey <@${memberId}>, your wallet address ${address} has been verified but You don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on goerli network is required.`
+        `Hey <@${memberId}>, your wallet address ${address} has been verified but You don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on ${chains[SUPER_TOKEN_CHAIN_ID]} is required.`
       );
-      return res.status(200).json({ code: "ok", message: "Success" });
     }
+    // upsert member object with wallet address and role
+    await prisma.member.upsert({
+      where: {
+        id: memberId
+      },
+      update: {
+        walletAddress: address,
+        role: hasRequiredStream ? "streamer" : "member"
+      },
+      create: {
+        id: memberId,
+        walletAddress: address,
+        role: hasRequiredStream ? "streamer" : "member"
+      }
+    });
+    return res.status(200).json({ code: "ok", message: "Success" });
   } catch (err) {
     console.log("failed to verify user:", err);
     return res

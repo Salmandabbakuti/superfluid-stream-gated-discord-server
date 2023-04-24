@@ -88,7 +88,7 @@ If you encounter any issues with the bot, please do the following:
 
 This is experimental software and subject to change over time.
 
-This package is not audited and has not been tested for security. Use at your own risk.
+This is a proof of concept and is not ready for production use. It is not audited and has not been tested for security. Use at your own risk.
 I do not give any warranties and will not be liable for any loss incurred through any use of this codebase.
 
 ## License

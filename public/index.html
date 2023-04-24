@@ -155,7 +155,6 @@
           return (logDiv.innerHTML =
             "Verification successful! You can now close this tab and return to Discord.");
         const result = await response.json();
-        console.log(data);
         if (result.code === "ok" && result.message === "Success") {
           logDiv.innerHTML =
             "Verification successful! You can now close this tab and return to Discord.";
