@@ -27,7 +27,7 @@ This project aims to gate a Discord server/channels with Superfluid streams. Exc
 
 ### Demo
 
-https://user-images.githubusercontent.com/29351207/233840689-38bf645d-cb28-4e95-9545-6804c00f9da3.mp4
+https://user-images.githubusercontent.com/29351207/234182032-b19f8dd1-48f3-4061-84f2-0135714c6fec.mp4
 
 ## Getting Started (as Developer)
 
