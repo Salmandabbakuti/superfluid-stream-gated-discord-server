@@ -104,36 +104,37 @@ cron.schedule("0 0 * * *", async () => {
       );
       const currentRole = member.role;
       let updatedRole = currentRole;
-      if (streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE) {
-        if (currentRole !== "streamer") {
-          // add streamer role
-          await guildMember.roles
-            .add(streamerRole)
-            .catch((err) => console.log("failed to add role", err));
-          updatedRole = "streamer";
-          console.log("added streamer role to member", guildMember.user.tag);
-        } else {
-          console.log(
-            `Stream is active for streamer: ${guildMember.user.tag}. No role changes required.`
-          );
-        }
+
+      if (
+        streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE &&
+        currentRole !== "streamer"
+      ) {
+        // add streamer role
+        await guildMember.roles
+          .add(streamerRole)
+          .catch((err) => console.log("failed to add role", err));
+        updatedRole = "streamer";
+        console.log("added streamer role to member", guildMember.user.tag);
+      } else if (
+        streamFlowRate < REQUIRED_MINIMUM_FLOW_RATE &&
+        currentRole !== "member"
+      ) {
+        // remove streamer role
+        await guildMember.roles
+          .remove(streamerRole)
+          .catch((err) => console.log("failed to remove role", err));
+        updatedRole = "member";
+        console.log("removed streamer role from member", guildMember.user.tag);
       } else {
-        if (currentRole !== "member") {
-          // remove streamer role
-          await guildMember.roles
-            .remove(streamerRole)
-            .catch((err) => console.log("failed to remove role", err));
-          updatedRole = "member";
-          console.log(
-            "removed streamer role from member",
-            guildMember.user.tag
-          );
-        } else {
-          console.log(
-            `Stream is not active for member: ${guildMember.user.tag}. No role changes required.`
-          );
-        }
+        console.log(
+          `Stream is ${streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE
+            ? "active"
+            : "not active"
+          } for ${currentRole}: ${guildMember.user.tag
+          }. No role changes required.`
+        );
       }
+
       // update role in db if changed
       if (updatedRole !== currentRole) {
         await prisma.member.update({
