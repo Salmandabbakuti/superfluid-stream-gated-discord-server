@@ -13,7 +13,7 @@ This project aims to gate a Discord server/channels with Superfluid streams. Exc
 
 1. Join the TechNow Discord Server: https://discord.gg/JEMFf5ux5M
 
-2. Make sure you are streaming a minimum of `0.5 DAIx/month` to `0x7348943c8d263ea253c0541656c36b88becd77b9` on `goerli`.
+2. Make sure you are streaming a minimum of `0.5 DAIx/month` to `0x7348943c8d263ea253c0541656c36b88becd77b9` on `goerli` if you wanted to access exclusive stream gated channels.
 
 3. Open the `#⁠start-here` channel on discord server.
 
@@ -23,7 +23,7 @@ This project aims to gate a Discord server/channels with Superfluid streams. Exc
 
 6. After you sign the message, the bot will verify if a minimum of `0.5 DAIx/month` stream is present between your wallet address and the server admin address.
 
-7. If the stream is present, you will be assigned the `streamer` role and gain access to the exclusive channels and perks on the server.
+7. If the stream is present, you will be assigned the `streamer` role and gain access to the exclusive channels and perks on the server. If the stream is not present, you will still be assigned the `member` role, which will allow you access to the general channels on the server.
 
 ### Demo
 
@@ -39,7 +39,7 @@ https://user-images.githubusercontent.com/29351207/234182032-b19f8dd1-48f3-4061-
 
 ### Steps:
 
-1. Create a new Discord server and create the necessary channels(`#start-here`, `#superfluid-exclusive`) and roles(`streamer`, `member`). `#start-here` channel should be the first channel in the server. `#superfluid-exclusive` is the channel where we want to gate the server. so make sure in the channel `settings` > `permisions`, the `@everyone` role does not have access to the channel. only the `streamer` role should have access to the channel.
+1. Create a new Discord server and create the necessary channels(`#start-here`, `#superfluid-exclusive`, `#general`) and roles(`streamer`, `member`). `#start-here` channel should be the first channel in the server. `#superfluid-exclusive` is the channel that we wanted to gate with stream. so make sure in the channel `settings` > `permisions`, the `@everyone` role does not have access to the channel. only the `streamer` role should have access to the channel. Also, Upon verifying with the wallet, regardless of whether a stream is present or not, a `member` role will be added to the user. This member role will allow them access to the general channels in the server. So make sure in `#general` channel `settings` > `permisions`, the `@everyone` role doesn't have access to the channel. only the `streamer` and `member` roles should have access to the channel.
 
 ![sf-exclusive-permissions](https://user-images.githubusercontent.com/29351207/233772777-4ca61378-8406-4a09-b9a9-35f051fb284f.png)
 

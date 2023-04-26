@@ -1,6 +1,7 @@
 const {
   Client,
   GatewayIntentBits,
+  Partials,
   ButtonBuilder,
   ActionRowBuilder,
   ButtonStyle
@@ -36,7 +37,8 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessages,
     GatewayIntentBits.MessageContent
-  ]
+  ],
+  partials: [Partials.GuildMember]
 });
 client.login(BOT_TOKEN);
 
@@ -226,8 +228,28 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("guildMemberAdd", async (member) => {
-  // Check if the member has a connected wallet
-  console.log("a new member hopped into server");
+  console.log("a new member hopped into server", member.user.tag);
+  const startHereChannel = member.guild.channels.cache.get(
+    START_HERE_CHANNEL_ID
+  );
+  startHereChannel.send({
+    content: `Welcome, ${member.user.username}. We hope you brought pizza! Please type \`/verify\` command to verify your wallet and get access to our exclusive channels and perks!`
+  });
+});
+
+client.on("guildMemberRemove", async (member) => {
+  console.log("a member left the server", member.user.tag, member.id);
+  // delete member from db only if they have atleast member role
+  const hasRole = member.roles.cache.some((role) => role.name === "member");
+  if (hasRole) {
+    prisma.member
+      .delete({
+        where: {
+          id: member.id
+        }
+      })
+      .catch((err) => console.log("failed to delete member from db", err));
+  }
 });
 
 const port = process.env.PORT || 3000;
@@ -262,19 +284,23 @@ app.post("/verify", async (req, res) => {
     const startHereChannel = guild.channels.cache.get(START_HERE_CHANNEL_ID);
     const hasRequiredStream = streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE;
 
+    // add member role by default upon verifying wallet
+    const memberRole = guild.roles.cache.find((role) => role.name === "member");
+    await member.roles.add(memberRole);
+
     if (hasRequiredStream) {
       const streamerRole = guild.roles.cache.find(
         (role) => role.name === "streamer"
       );
+      // add streamer role if stream is active
       await member.roles.add(streamerRole);
       // reply in discord channel that role has been added
       startHereChannel.send(
         `Hey <@${memberId}>, your wallet address ${address} has been verified and you have been given the streamer role. You can now access the #superfluid-exclusive channel.`
       );
     } else {
-      // reply in discord channel that role has not been added
       startHereChannel.send(
-        `Hey <@${memberId}>, your wallet address ${address} has been verified but You don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on ${chains[SUPER_TOKEN_CHAIN_ID]} is required.`
+        `Hey <@${memberId}>, your wallet address ${address} has been verified and you have been given member role. but you don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on ${chains[SUPER_TOKEN_CHAIN_ID]} is required.`
       );
     }
     // upsert member object with wallet address and role

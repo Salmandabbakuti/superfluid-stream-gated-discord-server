@@ -15,7 +15,6 @@
   "license": "ISC",
   "dependencies": {
     "@ethersproject/bytes": "^5.7.0",
-    "@ethersproject/contracts": "^5.7.0",
     "@ethersproject/hash": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@ethersproject/transactions": "^5.7.0",
