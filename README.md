@@ -43,7 +43,7 @@ https://user-images.githubusercontent.com/29351207/234182032-b19f8dd1-48f3-4061-
 
 ![sf-exclusive-permissions](https://user-images.githubusercontent.com/29351207/233772777-4ca61378-8406-4a09-b9a9-35f051fb284f.png)
 
-2. Create a new Discord bot [Discord Developer Portal](https://discord.com/developers/applications) with necessary permissions and invite it to the server.
+2. Create a new Discord bot at [Discord Developer Portal](https://discord.com/developers/applications) with necessary permissions and invite it to the server.
 
 ![sf-bot-intents](https://user-images.githubusercontent.com/29351207/233772853-9c023857-2fe8-4461-8916-d160b9cbb9fa.png)
 

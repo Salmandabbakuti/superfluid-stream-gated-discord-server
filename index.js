@@ -102,23 +102,19 @@ cron.schedule("0 0 * * *", async () => {
       console.log(
         `Current flow rate for ${guildMember.user.tag} with wallet ${member.walletAddress} is ${streamFlowRate} DAIx/sec`
       );
+
+      const hasRequiredStream = streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE;
       const currentRole = member.role;
       let updatedRole = currentRole;
 
-      if (
-        streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE &&
-        currentRole !== "streamer"
-      ) {
+      if (hasRequiredStream && currentRole !== "streamer") {
         // add streamer role
         await guildMember.roles
           .add(streamerRole)
           .catch((err) => console.log("failed to add role", err));
         updatedRole = "streamer";
         console.log("added streamer role to member", guildMember.user.tag);
-      } else if (
-        streamFlowRate < REQUIRED_MINIMUM_FLOW_RATE &&
-        currentRole !== "member"
-      ) {
+      } else if (!hasRequiredStream && currentRole !== "member") {
         // remove streamer role
         await guildMember.roles
           .remove(streamerRole)
@@ -127,9 +123,7 @@ cron.schedule("0 0 * * *", async () => {
         console.log("removed streamer role from member", guildMember.user.tag);
       } else {
         console.log(
-          `Stream is ${streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE
-            ? "active"
-            : "not active"
+          `Stream is ${hasRequiredStream ? "active" : "not active"
           } for ${currentRole}: ${guildMember.user.tag
           }. No role changes required.`
         );
@@ -284,6 +278,7 @@ app.post("/verify", async (req, res) => {
     );
     const startHereChannel = guild.channels.cache.get(START_HERE_CHANNEL_ID);
     const hasRequiredStream = streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE;
+    const truncatedAddress = address.slice(0, 5) + "..." + address.slice(-4);
 
     // add member role by default upon verifying wallet
     const memberRole = guild.roles.cache.find((role) => role.name === "member");
@@ -297,11 +292,12 @@ app.post("/verify", async (req, res) => {
       await member.roles.add(streamerRole);
       // reply in discord channel that role has been added
       startHereChannel.send(
-        `Hey <@${memberId}>, your wallet address ${address} has been verified and you have been given the streamer role. You can now access the #superfluid-exclusive channel.`
+        // send ellipsis address 
+        `Hey <@${memberId}>, your wallet address ${truncatedAddress} has been verified and you have been given the streamer role. You can now access the #superfluid-exclusive channel.`
       );
     } else {
       startHereChannel.send(
-        `Hey <@${memberId}>, your wallet address ${address} has been verified and you have been given member role. but you don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on ${chains[SUPER_TOKEN_CHAIN_ID]} is required.`
+        `Hey <@${memberId}>, your wallet address ${truncatedAddress} has been verified and you have been given member role. but you don't have enough stream to access #superfluid-exclusive channel. A minimum of 0.5 DAIx/month stream to ${SERVER_ADMIN_ADDRESS} on ${chains[SUPER_TOKEN_CHAIN_ID]} is required.`
       );
     }
     // upsert member object with wallet address and role
