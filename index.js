@@ -257,6 +257,8 @@ app.post("/verify", async (req, res) => {
     });
   const { token, address, message, signature } = req.body;
   try {
+    const { guildId, memberId } = jwt.verify(token, JWT_SECRET);
+    console.log("decoded from token", { guildId, memberId });
     console.log("verifying signature and checking stream");
     const digest = arrayify(hashMessage(message));
     const recoveredAddress = recoverAddress(digest, signature);
@@ -264,15 +266,13 @@ app.post("/verify", async (req, res) => {
       return res
         .status(401)
         .send({ code: "Unauthorized", message: "Invalid wallet signature" });
-    // update member object with wallet address
-    const { guildId, memberId } = jwt.verify(token, JWT_SECRET);
-    console.log("decoded from token", { guildId, memberId });
-    const guild = client.guilds.cache.get(guildId);
-    const member = await guild.members.fetch(memberId);
+
     const streamFlowRate = await getStreamFlowRate(
       address.toLowerCase(),
       SERVER_ADMIN_ADDRESS
     );
+    const guild = client.guilds.cache.get(guildId);
+    const member = await guild.members.fetch(memberId);
     const startHereChannel = guild.channels.cache.get(START_HERE_CHANNEL_ID);
     const hasRequiredStream = streamFlowRate >= REQUIRED_MINIMUM_FLOW_RATE;
     const truncatedAddress = address.slice(0, 5) + "..." + address.slice(-4);
