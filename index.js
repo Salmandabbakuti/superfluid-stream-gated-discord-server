@@ -1,6 +1,7 @@
 const {
   Client,
   GatewayIntentBits,
+  Events,
   Partials,
   ButtonBuilder,
   ActionRowBuilder,
@@ -145,11 +146,9 @@ cron.schedule("0 0 * * *", async () => {
   console.log("Done checking streams and adding/removing roles");
 });
 
-client.on("ready", () => {
-  console.log(`Logged in as ${client.user.tag}`);
-});
+client.once(Events.ClientReady, () => console.log(`Logged in as ${client.user.tag}`));
 
-client.on("messageCreate", async (msg) => {
+client.on(Events.MessageCreate, async (msg) => {
   if (msg.author.bot || msg.system || msg.channel.type === "DM") return;
   if (msg.channelId === START_HERE_CHANNEL_ID) {
     // Basic command handler
@@ -176,7 +175,7 @@ client.on("messageCreate", async (msg) => {
   }
 });
 
-client.on("interactionCreate", async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isCommand())
     return interaction.reply(
       "I don't know what you mean. I can only respond to the following commands: /verify, /ping"
@@ -199,7 +198,7 @@ client.on("interactionCreate", async (interaction) => {
     const verifyWithWalletButton = new ButtonBuilder()
       .setLabel("Verify with Wallet")
       .setStyle(ButtonStyle.Link)
-      .setURL(`${APP_URL}?token=${jwtToken}`);
+      .setURL(`${APP_URL}/verify?token=${jwtToken}`);
     const actionRow = new ActionRowBuilder().addComponents(
       verifyWithWalletButton
     );
@@ -222,7 +221,7 @@ client.on("interactionCreate", async (interaction) => {
   }
 });
 
-client.on("guildMemberAdd", async (member) => {
+client.on(Events.GuildMemberAdd, async (member) => {
   console.log("a new member hopped into server", member.user.tag);
   const startHereChannel = member.guild.channels.cache.get(
     START_HERE_CHANNEL_ID
@@ -232,7 +231,7 @@ client.on("guildMemberAdd", async (member) => {
   });
 });
 
-client.on("guildMemberRemove", async (member) => {
+client.on(Events.GuildMemberRemove, async (member) => {
   console.log("a member left the server", member.user.tag, member.id);
   // delete member from db only if they have atleast member role
   const hasRole = member.roles.cache.some((role) => role.name === "member");
@@ -246,8 +245,6 @@ client.on("guildMemberRemove", async (member) => {
       .catch((err) => console.log("failed to delete member from db", err));
   }
 });
-
-const port = process.env.PORT || 3000;
 
 // verify signature and add wallet address to the member object and then add role if stream is active
 app.post("/verify", async (req, res) => {
@@ -324,10 +321,7 @@ app.post("/verify", async (req, res) => {
   }
 });
 
-app.get("/", (req, res) => {
-  res.send(__dirname + "/public/index.html");
-});
+app.get("/verify", (req, res) => res.sendFile(__dirname + "/public/index.html"));
 
-app.listen(port, () => {
-  console.log(`Server listening at http://localhost:${port}`);
-});
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server listening at http://localhost:${port}`));
