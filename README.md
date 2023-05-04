@@ -7,13 +7,13 @@ This project aims to gate a Discord server/channels with Superfluid streams. Exc
 1. A Discord account
 2. Understanding of the Superfluid protocol and how to stream tokens
 3. An Ethereum wallet with some tokens to stream. You can get some test tokens from the [Superfluid faucet](https://app.superfluid.finance/).
-4. Stream a minimum of `0.5DAIx/month` to the server admin account `0x7348943c8d263ea253c0541656c36b88becd77b9` on `goerli` testnet. You can use the [Superfluid app](https://app.superfluid.finance/) to do this.
+4. Stream a minimum of `0.5DAIx/month` to the server admin account `0x7348943c8d263ea253c0541656c36b88becd77b9` on `polygon mumbai` testnet. You can use the [Superfluid app](https://app.superfluid.finance/) to do this.
 
 ### Steps:
 
 1. Join the TechNow Discord Server: https://discord.gg/JEMFf5ux5M
 
-2. Make sure you are streaming a minimum of `0.5 DAIx/month` to `0x7348943c8d263ea253c0541656c36b88becd77b9` on `goerli` if you wanted to access exclusive stream gated channels.
+2. Make sure you are streaming a minimum of `0.5 DAIx/month` to `0x7348943c8d263ea253c0541656c36b88becd77b9` on `polygon mumbai` if you wanted to access exclusive stream gated channels.
 
 3. Open the `#⁠start-here` channel on discord server.
 
