@@ -16,18 +16,6 @@ const commands = [
       "allows you to verify your wallet with stream and join the server"
   }
 ];
-// Grab all the command folders from the commands directory you created earlier
-for (const command of commands) {
-  console.log(command);
-  console.log(`[INFO] Loaded command ${command.name}.`);
-  // if name or execute is missing, throw an error
-  if (!command.description || !command.execute) {
-    console.log(
-      `[WARNING] The command ${command.name} is missing a required "description" or "execute" property.`
-    );
-  }
-}
-
 // Construct and prepare an instance of the REST module
 const rest = new REST().setToken(BOT_TOKEN);
 
