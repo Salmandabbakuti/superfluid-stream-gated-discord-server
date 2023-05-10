@@ -306,11 +306,13 @@ app.post("/verify", async (req, res) => {
       },
       update: {
         walletAddress: address,
+        username: member.user.username,
         role: hasRequiredStream ? "streamer" : "member"
       },
       create: {
         id: memberId,
         walletAddress: address,
+        username: member.user.username,
         role: hasRequiredStream ? "streamer" : "member"
       }
     });

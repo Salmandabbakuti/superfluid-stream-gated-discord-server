@@ -12,6 +12,7 @@ datasource db {
 
 model Member {
   id            String   @id @map("_id")
+  username      String   @default("")
   role          String?  @default("member")
   walletAddress String
   createdAt     DateTime @default(now())
