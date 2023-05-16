@@ -15,11 +15,11 @@
   "license": "ISC",
   "dependencies": {
     "@ethersproject/bytes": "^5.7.0",
+    "@ethersproject/contracts": "^5.7.0",
     "@ethersproject/hash": "^5.7.0",
     "@ethersproject/providers": "^5.7.2",
     "@ethersproject/transactions": "^5.7.0",
     "@prisma/client": "^4.13.0",
-    "@superfluid-finance/sdk-core": "^0.6.5",
     "cors": "^2.8.5",
     "discord.js": "^14.9.0",
     "dotenv": "^16.0.3",
