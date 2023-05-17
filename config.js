@@ -10,6 +10,7 @@ module.exports = {
   SERVER_ADMIN_ADDRESS: process.env.SERVER_ADMIN_ADDRESS || "0x7348943c8d263ea253c0541656c36b88becd77b9",
   SUPER_TOKEN_CHAIN_ID: +process.env.SUPER_TOKEN_CHAIN_ID || 5, // + for casting to number
   SUPER_TOKEN_ADDRESS: process.env.SUPER_TOKEN_ADDRESS || "0xF2d68898557cCb2Cf4C10c3Ef2B034b2a69DAD00",
+  CFAV1_ADDRESS: process.env.CFAV1_ADDRESS || "0xEd6BcbF6907D4feEEe8a8875543249bEa9D308E8",
   REQUIRED_MINIMUM_FLOW_RATE: 192901234567, // 192901234567 is 0.5 DAIx/month to consider access to the channel. we can think of it as a subscription to access channel content
   APP_URL: process.env.APP_URL || "http://localhost:3000"
 };

@@ -11,7 +11,7 @@ const { recoverAddress } = require("@ethersproject/transactions");
 const { arrayify } = require("@ethersproject/bytes");
 const { hashMessage } = require("@ethersproject/hash");
 const { JsonRpcProvider } = require("@ethersproject/providers");
-const { Framework } = require("@superfluid-finance/sdk-core");
+const { Contract } = require("@ethersproject/contracts");
 const cron = require("node-cron");
 const jwt = require("jsonwebtoken");
 const express = require("express");
@@ -28,6 +28,7 @@ const {
   SERVER_ADMIN_ADDRESS,
   SUPER_TOKEN_CHAIN_ID,
   SUPER_TOKEN_ADDRESS,
+  CFAV1_ADDRESS,
   REQUIRED_MINIMUM_FLOW_RATE,
   APP_URL
 } = require("./config.js");
@@ -55,6 +56,12 @@ app.use(
 
 const provider = new JsonRpcProvider(RPC_URL);
 
+const cfaV1ABI = [
+  "function getFlow(address token, address sender, address receiver) view returns (uint256 timestamp, int96 flowRate, uint256 deposit, uint256 owedDeposit)"
+];
+
+const cfaV1Contract = new Contract(CFAV1_ADDRESS, cfaV1ABI, provider);
+
 const chains = {
   1: "ethereum mainnet",
   5: "goerli",
@@ -64,17 +71,12 @@ const chains = {
 
 const getStreamFlowRate = async (sender, receiver) => {
   try {
-    const sf = await Framework.create({
-      provider,
-      chainId: SUPER_TOKEN_CHAIN_ID
-    });
-    const { flowRate } = await sf.cfaV1.getFlow({
-      superToken: SUPER_TOKEN_ADDRESS,
+    const { flowRate } = await cfaV1Contract.getFlow(
+      SUPER_TOKEN_ADDRESS,
       sender,
-      receiver,
-      providerOrSigner: provider
-    });
-    return flowRate;
+      receiver
+    );
+    return flowRate.toString();
   } catch (error) {
     console.log("err getting flow info", error);
     return 0;
