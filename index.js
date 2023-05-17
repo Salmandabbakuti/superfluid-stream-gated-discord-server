@@ -11,7 +11,6 @@ const { recoverAddress } = require("@ethersproject/transactions");
 const { arrayify } = require("@ethersproject/bytes");
 const { hashMessage } = require("@ethersproject/hash");
 const { JsonRpcProvider } = require("@ethersproject/providers");
-const { Framework } = require("@superfluid-finance/sdk-core");
 const { Contract } = require("@ethersproject/contracts");
 const cron = require("node-cron");
 const jwt = require("jsonwebtoken");
