@@ -41,7 +41,6 @@
 
     .container {
       padding: 2rem;
-      /* width: 100%; */
       margin: 1.2rem auto;
       text-align: center;
       color: inherit;
@@ -73,7 +72,6 @@
 
     footer {
       position: fixed;
-      /* margin-top: 2%; */
       height: 50;
       width: 98%;
       text-align: center;
@@ -118,12 +116,15 @@
         console.log(
           "Oh great, another user trying to authorize without a token. Let's just print some error messages and see if they notice... 🙄"
         );
-        return (logDiv.innerHTML =
-          "No JWT token provided. Please use the link provided by SuperApp Bot");
+        logDiv.innerHTML =
+          "No JWT token provided. Please use the link provided by SuperApp Bot";
+        return;
       }
-      if (!window.ethereum)
-        return (logDiv.innerHTML =
-          "Please use a Web3 browser like MetaMask to connect your wallet");
+      if (!window.ethereum) {
+        logDiv.innerHTML =
+          "Please use a Web3 browser like MetaMask to connect your wallet";
+        return;
+      }
       try {
         const [address] = await window.ethereum.request({
           method: "eth_requestAccounts"
@@ -150,9 +151,11 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(data)
         });
-        if (response.ok)
-          return (logDiv.innerHTML =
-            "Verification successful! You can now close this tab and return to Discord.");
+        if (response.ok) {
+          logDiv.innerHTML =
+            "Verification successful! You can now close this tab and return to Discord.";
+          return;
+        }
         const result = await response.json();
         if (result.code === "ok" && result.message === "Success") {
           logDiv.innerHTML =
